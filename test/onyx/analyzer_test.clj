@@ -11,7 +11,23 @@
     (catch Throwable t
       (a/analyze-error {} t))))
 
+(def workflow-unbound )
+(def workflow-empty [])
+
 (deftest workflow-errors
+  (is (= {:error-type :type-error
+          :expected-type clojure.lang.PersistentVector
+          :found-type clojure.lang.Var$Unbound
+          :error-key nil
+          :error-value workflow-unbound
+          :path nil}
+         (validate! os/Workflow workflow-unbound)))
+
+  (is (= {:error-type :constraint-violated
+          :predicate 'non-empty-vector?
+          :path nil}
+         (validate! os/Workflow workflow-empty)))
+
   (is (= {:error-type :value-predicate-error
           :error-key 1
           :error-value "b"

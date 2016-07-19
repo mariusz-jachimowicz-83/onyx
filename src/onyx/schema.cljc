@@ -5,6 +5,13 @@
             [schema.spec.leaf :as leaf]
             [schema.spec.core :as spec]))
 
+(defn get-possibly-unbound-var
+  "Like var-get but returns nil if the var is unbound."
+  [v]
+  (try (var-get v)
+       (catch IllegalStateException e
+         nil)))
+
 (s/defschema NamespacedKeyword
   (s/pred (fn [kw]
             (and (keyword? kw)
@@ -31,7 +38,12 @@
                                    (vector? edge))) 'edge-two-nodes?))
 
 (s/defschema Workflow
-  (s/constrained [edge-validator] vector? 'vector?))
+  (s/constrained [edge-validator] (fn [workflow]
+                                      (let [w (get-possibly-unbound-var workflow)]
+                                           (and (vector? w)
+                                                (not (empty? w)))
+                                      ))
+                                  'non-empty-vector?))
 
 (s/defschema Language
   (apply s/enum (get-in i/model [:catalog-entry :model :onyx/language :choices])))
